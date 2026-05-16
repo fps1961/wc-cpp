@@ -1,3 +1,4 @@
+#include <chrono>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -23,12 +24,12 @@ void checkIfFilePathIsValid(const std::string& file_path)
 }
 
 
-void printTotalBytesOfFile(const std::string& file_path)
+uintmax_t getTotalBytesOfFile(const std::string& file_path)
 {
-    std::cout << std::format("{} {}\n", std::filesystem::file_size(file_path), file_path);
+    return std::filesystem::file_size(file_path);
 }
 
-void printTotalLinesOfFile(const std::string& file_path)
+long long getTotalLinesOfFile(const std::string& file_path)
 {
     std::ifstream file_stream(file_path);
 
@@ -40,7 +41,39 @@ void printTotalLinesOfFile(const std::string& file_path)
         ++total_lines;
     }
 
-    std::cout << std::format("{} {}\n", total_lines, file_path);
+    return total_lines;
+}
+
+long long getTotalWordsOfFile(const std::string& file_path)
+{
+    std::ifstream file_stream(file_path);
+
+    std::string word{};
+    long long total_words{0};
+
+    while (file_stream >> word)
+    {
+        ++total_words;
+    }
+
+    return total_words;
+}
+
+long long getTotalCharsOfFile(const std::string& file_path)
+{
+    std::wifstream file_stream(file_path);
+    file_stream.imbue(std::locale(""));
+    std::noskipws(file_stream);
+
+    wchar_t c{};
+    long long total_chars{0};
+
+    while (file_stream >> c)
+    {
+        ++total_chars;
+    }
+
+    return total_chars;
 }
 
 
@@ -58,19 +91,38 @@ int main(const int argc, char* argv[])
     if (const auto command = std::string(argv[1]); command == "-c")
     {
         checkIfFileProvided(argc);
-        printTotalBytesOfFile(argv[2]);
+        std::cout << std::format("{} {}\n", getTotalBytesOfFile(argv[2]), argv[2]);
     }
     else if (command == "-l")
     {
         checkIfFileProvided(argc);
-        printTotalLinesOfFile(argv[2]);
+        std::cout << std::format("{} {}\n", getTotalLinesOfFile(argv[2]), argv[2]);
+    }
+    else if (command == "-w")
+    {
+        checkIfFileProvided(argc);
+        std::cout << std::format("{} {}\n", getTotalWordsOfFile(argv[2]), argv[2]);
+    }
+    else if (command == "-m")
+    {
+        checkIfFileProvided(argc);
+        std::cout << std::format("{} {}\n", getTotalCharsOfFile(argv[2]), argv[2]);
     }
     else if (command == "-h")
     {
         std::string c_option = "-c [file_path] will return the number of bytes in the file.";
         std::string l_option = "-l [file_path] will return the number of lines in the file.";
+        std::string w_option = "-w [file_path] will return the number of words in the file.";
+        std::string m_option = "-m [file_path] will return the number of characters in the file.";
 
-        std::cout << std::format("{}\n{}\n", c_option, l_option);
+        std::cout << std::format("{}\n{}\n{}\n{}\n", c_option, l_option, w_option, m_option);
+    }
+    else if (argc == 2)
+    {
+        checkIfFilePathIsValid(argv[1]);
+        std::string file_name = argv[1];
+        std::cout << std::format("{} {} {} {}\n", getTotalLinesOfFile(file_name), getTotalWordsOfFile(file_name),
+                                 getTotalBytesOfFile(file_name), file_name);
     }
     else
     {
